@@ -15,7 +15,9 @@ def main():
     parser.add_argument("-o", "--output", required=True, type=Path)
     args = parser.parse_args()
     try:
-        source = sys.stdin.buffer.read().decode("utf-8")
+        sys.stdin.reconfigure(encoding="utf-8", newline=None)
+        sys.stderr.reconfigure(encoding="utf-8")
+        source = sys.stdin.read()
         document = translate(source, sys.stderr)
         args.output.write_text(document, encoding="utf-8")
     except pp.ParseBaseException as error:
