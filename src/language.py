@@ -35,6 +35,18 @@ def build_grammar():
     return (pp.ZeroOrMore(binding) + value).parse_with_tabs()
 
 
+def evaluate_mapping(pairs, source, location, constants, output):
+    """Evaluate dictionary entries in order and reject duplicate keys."""
+    result = {}
+    for key, item in pairs:
+        if key in result:
+            raise pp.ParseFatalException(
+                source, location, f"Повтор ключа {key}"
+            )
+        result[key] = evaluate(item, source, constants, output)
+    return result
+
+
 def evaluate(node, source, constants, output):
     """Evaluate a syntax node, resolving names in declaration order."""
     if not isinstance(node, tuple):
@@ -48,14 +60,7 @@ def evaluate(node, source, constants, output):
             )
         return constants[name]
     if kind == "map":
-        result = {}
-        for key, item in args[0]:
-            if key in result:
-                raise pp.ParseFatalException(
-                    source, location, f"Повтор ключа {key}"
-                )
-            result[key] = evaluate(item, source, constants, output)
-        return result
+        return evaluate_mapping(args[0], source, location, constants, output)
     values = [evaluate(item, source, constants, output) for item in args]
     if kind == "print":
         print(values[0], file=output)
